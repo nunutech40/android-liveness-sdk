@@ -28,11 +28,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8 // Java 8 atau 11 aman
-        targetCompatibility JavaVersion.VERSION_1_8
+        // GANTI JADI 11 BIAR SAMA KAYAK APP
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        // GANTI JADI 11
+        jvmTarget = '11'
     }
 }
 
