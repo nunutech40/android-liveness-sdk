@@ -23,6 +23,7 @@ enum class LivenessError {
 
 data class LivenessResult(
     val isSuccess: Boolean,
-    val evidencePhotos: Map<LivenessStep, Bitmap> = emptyMap(),
+    val totalBitmap: Bitmap? = null,
+    val stepEvidence: Map<LivenessStep, Bitmap> = emptyMap(),
     val error: LivenessError? = null
 )

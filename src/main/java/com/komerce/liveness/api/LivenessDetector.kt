@@ -48,7 +48,7 @@ interface LivenessDetector {
      * - `evidencePhotos`: Map<Step, Bitmap> (Foto bukti tiap step)
      */
     fun startDetection(
-        challenges: List<LivenessStep>,
+        config: LivenessConfig,
         onStepSuccess: (LivenessStep) -> Unit,
         onStepError: (LivenessError) -> Unit,
         onComplete: (LivenessResult) -> Unit

@@ -35,13 +35,21 @@ import com.komerce.liveness.api.LivenessStep
  * @param onComplete Callback final ketika semua tantangan selesai & foto berhasil diambil.
  */
 
+/**
+ * FaceAnalyzer
+ * Otak dari Liveness Detection.
+ * Mendukung mode Standard (1 Foto Akhir) dan Audit (Foto tiap step).
+ */
+
 internal class FaceAnalyzer(
     private val steps: List<LivenessStep>,
+    private val isAuditMode: Boolean, // <--- SUDAH DITAMBAHKAN
     private val onStepSuccess: (LivenessStep) -> Unit,
     private val onStepError: (LivenessError) -> Unit,
     private val onComplete: (LivenessResult) -> Unit
 ) : ImageAnalysis.Analyzer {
 
+    // Setup ML Kit
     private val options = FaceDetectorOptions.Builder()
         .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
         .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
@@ -50,94 +58,93 @@ internal class FaceAnalyzer(
         .build()
     private val detector = FaceDetection.getClient(options)
 
-    // State Variables
+    // State
     private var currentStepIndex = 0
     private var isFinished = false
 
-    private val capturedEvidence = mutableMapOf<LivenessStep, Bitmap>()
+    // Penampung bukti (Cuma dipake kalau isAuditMode = true)
+    private val evidenceMap = mutableMapOf<LivenessStep, Bitmap>()
 
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
-        // 1. Circuit Breaker
         if (isFinished) {
-            imageProxy.close() // PENTING: Tutup frame biar gak numpuk
+            imageProxy.close()
             return
         }
 
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
-            // 2. Convert Format: CameraX (YUV) -> ML Kit (InputImage)
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-
-            // 3. Lempar ke ML Kit
             detector.process(image)
                 .addOnSuccessListener { faces ->
-                    // 4. Validasi Pintu Depan (Satpam)
                     if (faces.isEmpty()) {
                         onStepError(LivenessError.NO_FACE_DETECTED)
                     } else if (faces.size > 1) {
                         onStepError(LivenessError.MULTIPLE_FACES)
                     } else {
-                        // 5. Kalau aman, masuk ke Logic Bisnis
                         processFaceLogic(faces[0], imageProxy)
                     }
                 }
-                .addOnCompleteListener {
-                    // 6. FLUSH MEMORY (Wajib!)
-                    imageProxy.close()
-                }
+                .addOnFailureListener { e -> e.printStackTrace() }
+                .addOnCompleteListener { imageProxy.close() }
+        } else {
+            imageProxy.close()
         }
     }
 
     private fun processFaceLogic(face: Face, imageProxy: ImageProxy) {
-        // 1. Cek apakah Playlist udah abis?
+        // --- PHASE 1: FINAL GATE (Ambil Foto Terbaik) ---
+        // Kalau semua step sudah lewat, kita cek apakah muka lurus buat foto terakhir
         if (currentStepIndex >= steps.size) {
-            finishJob()
+            if (isFaceStraight(face)) {
+                finishJob(imageProxy) // <--- Panggil finishJob sambil bawa gambar
+            }
             return
         }
 
-        // 2. Ambil Tantangan saat ini (berdasarkan index)
+        // --- PHASE 2: CHALLENGE LOGIC ---
         val currentTargetStep = steps[currentStepIndex]
-
-        // 3. Ambil Data Sensor Wajah
         val yaw = face.headEulerAngleY
         val smileProb = face.smilingProbability ?: 0f
 
-        // 4. Ujian Kelulusan (Matematika)
         val isStepValid = when (currentTargetStep) {
-            LivenessStep.LOOK_LEFT -> yaw > 35    // Harus nengok > 35 derajat
+            LivenessStep.LOOK_LEFT -> yaw > 35
             LivenessStep.LOOK_RIGHT -> yaw < -35
-            LivenessStep.SMILE -> (yaw > -15 && yaw < 15) && smileProb > 0.7 // Senyum & Lurus
+            LivenessStep.SMILE -> (yaw > -15 && yaw < 15) && smileProb > 0.7
             LivenessStep.BLINK -> (face.leftEyeOpenProbability ?: 1f) < 0.4
             else -> false
         }
 
-        // 5. Kalau LULUS UJIAN
         if (isStepValid) {
-            // JEPRET! Ambil frame detik ini sebagai barang bukti
-            val evidenceBitmap = imageProxy.toBitmap()
+            // --- LOGIC CONFIGURABLE ---
+            if (isAuditMode) {
+                // Hanya convert ke bitmap jika mode Audit nyala (Hemat Memori)
+                val bitmap = imageProxy.toBitmap()
+                evidenceMap[currentTargetStep] = bitmap
+            }
 
-            // Simpan ke Map
-            capturedEvidence[currentTargetStep] = evidenceBitmap
-
-            // Lapor ke UI
             onStepSuccess(currentTargetStep)
-
-            // Geser pointer ke lagu berikutnya
             currentStepIndex++
         }
     }
 
-    private fun finishJob() {
-        if (isFinished) return
-        isFinished = true // Nyalain switch biar analyze() berhenti kerja
+    // Helper: Pastikan muka lurus (toleransi 10 derajat)
+    private fun isFaceStraight(face: Face): Boolean {
+        return face.headEulerAngleY < 10 && face.headEulerAngleY > -10
+    }
 
-        // Bungkus semua bukti jadi satu paket result
-        onComplete(
-            LivenessResult(
-                isSuccess = true,
-                evidencePhotos = capturedEvidence // Map isinya: {KIRI: Foto1, KANAN: Foto2}
-            )
-        )
+    private fun finishJob(imageProxy: ImageProxy) {
+        if (isFinished) return
+        isFinished = true
+
+        // Ambil Foto Final (Wajib Ada)
+        val finalBitmap = imageProxy.toBitmap()
+
+        // Return Result
+        onComplete(LivenessResult(
+            isSuccess = true,
+            totalBitmap = finalBitmap, // Foto Selfie Lurus
+            stepEvidence = if (isAuditMode) evidenceMap else emptyMap() // Bukti Step (Opsional)
+        ))
     }
 }

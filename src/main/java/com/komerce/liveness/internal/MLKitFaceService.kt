@@ -9,6 +9,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.komerce.liveness.api.LivenessConfig
 import com.komerce.liveness.api.LivenessDetector
 import com.komerce.liveness.api.LivenessError
 import com.komerce.liveness.api.LivenessResult
@@ -41,16 +42,11 @@ internal class MLKitFaceService(
     private var lifecycleOwner: LifecycleOwner? = null
 
     // Executor: Thread khusus untuk memproses gambar agar tidak membebani Main Thread (UI).
-    // Ini penting biar tampilan kamera tetap smooth 60fps walau analisisnya berat.
     private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     // Ini "Otak" matematikanya. Disimpan di variabel biar bisa kita kontrol.
     private var faceAnalyzer: FaceAnalyzer? = null
 
-    /**
-     * Menyiapkan Provider Kamera secara Asynchronous.
-     * Kita butuh Context untuk akses hardware kamera.
-     */
     override fun bind(lifecycleOwner: LifecycleOwner, previewView: PreviewView) {
         this.lifecycleOwner = lifecycleOwner
         this.previewView = previewView
@@ -64,10 +60,9 @@ internal class MLKitFaceService(
 
     /**
      * Memulai Sesi Liveness.
-     * Di sini kita merakit semua komponen: Preview + Analyzer + Lifecycle.
      */
     override fun startDetection(
-        challenges: List<LivenessStep>,
+        config: LivenessConfig,
         onStepSuccess: (LivenessStep) -> Unit,
         onStepError: (LivenessError) -> Unit,
         onComplete: (LivenessResult) -> Unit
@@ -85,21 +80,18 @@ internal class MLKitFaceService(
         preview.setSurfaceProvider(view.surfaceProvider)
 
         // 2. Setup Analyzer (Otak Logika)
-        // Kita inject logic step dan callback dari App Utama ke dalam FaceAnalyzer
         faceAnalyzer = FaceAnalyzer(
-            steps = challenges,
+            steps = config.steps,
+            isAuditMode = config.isAuditMode,
             onStepSuccess = onStepSuccess,
             onStepError = onStepError,
             onComplete = { result ->
-                // Kalau analisis selesai (sukses/gagal), matikan kamera otomatis
                 stopDetection()
                 onComplete(result)
             }
         )
 
         // 3. Setup UseCase ImageAnalysis (Aliran data di belakang layar)
-        // STRATEGY_KEEP_ONLY_LATEST: Kalau HP lemot, buang frame lama, ambil yang terbaru aja.
-        // Biar analisis selalu real-time dan gak delay (lag).
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
@@ -116,8 +108,6 @@ internal class MLKitFaceService(
             provider.unbindAll()
 
             // BIND SEMUANYA KE LIFECYCLE
-            // Artinya: Kalau Activity di-minimize (onPause), kamera otomatis mati.
-            // Kalau dibuka lagi (onResume), kamera nyala lagi. Hemat baterai & kode rapi.
             provider.bindToLifecycle(
                 owner,
                 cameraSelector,
@@ -129,9 +119,6 @@ internal class MLKitFaceService(
         }
     }
 
-    /**
-     * Mematikan total kamera.
-     */
     override fun stopDetection() {
         cameraProvider?.unbindAll()
     }
