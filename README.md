@@ -1,7 +1,12 @@
 # 📸 Android Liveness Detection SDK
 
-**Simple, Configurable, and Lightweight Liveness Detection for Android.**  
-Built on top of **Google ML Kit** and **CameraX**.
+<p align="center">
+  <!-- Ganti dengan demo GIF lo -->
+  <img src="https://link-to-your-gif/demo.gif" width="300" />
+</p>
+
+**Simple, Configurable, and Lightweight Liveness Detection for Android**  
+Built on top of **Google ML Kit** and **CameraX**, designed for real-world verification use cases.
 
 ![Kotlin](https://img.shields.io/badge/language-Kotlin-purple)
 ![MinSDK](https://img.shields.io/badge/minSdk-24-orange)
@@ -11,38 +16,70 @@ Built on top of **Google ML Kit** and **CameraX**.
 
 ## ✨ Features
 
-- **Configurable Steps**  
-  Define your own verification flow (e.g. Look Left → Look Right → Smile).
+- **Configurable Verification Steps**  
+  Define custom liveness flow (Look Left → Look Right → Smile → Blink).
 
-- **Audit Mode**  
-  Save evidence for every step or only the final selfie.
+- **Audit Mode Support**  
+  Capture evidence for each step or only final selfie.
 
-- **State Machine Logic**  
-  Prevents users from skipping verification steps.
+- **State Machine Enforcement**  
+  Users cannot skip or reorder steps.
 
-- **Privacy First (Offline)**  
-  All processing runs on-device. No data is sent outside by the SDK.
+- **Privacy First (Offline Processing)**  
+  All face analysis happens on-device. No cloud dependency.
 
-- **Clean API**  
-  Simple usage via `LivenessFactory` and `LivenessConfig`.
+- **Clean & Minimal API**  
+  Simple integration using `LivenessFactory` and `LivenessConfig`.
+
+---
+
+## 🏗️ Architecture & Tech Stack
+
+This SDK uses a **state-driven, background-threaded architecture** to ensure smooth UI performance and strict verification order.
+
+### Core Technologies
+
+- **CameraX** – Camera lifecycle & preview handling  
+- **Google ML Kit** – Face detection & landmark analysis  
+- **ExecutorService** – Background processing (non-blocking UI)  
+- **State Machine** – Enforces sequential liveness steps  
+
+### Data Flow Diagram
+
+```mermaid
+graph TD
+    A[CameraX Preview] -->|ImageProxy| B(MLKitFaceService)
+    B -->|Background Thread| C{FaceAnalyzer}
+
+    subgraph Core Engine
+        C -->|Input Image| D[Google ML Kit]
+        D -->|Face & Pose Data| C
+        C -->|Validation Logic| E{State Machine}
+    end
+
+    E -- Passed --> F[Capture Evidence]
+    E -- Failed --> G[Ignore Frame]
+
+    F -->|Callback| H[Main Thread / UI]
+    G -->|Callback| H
+```
 
 ---
 
 ## 🛠 Installation
 
-### Option 1: Git Submodule (Recommended for Private Projects)
+### Option 1: Git Submodule (Recommended)
 
-1. Add SDK as submodule:
 ```bash
 git submodule add https://github.com/nunutech40/android-liveness-sdk.git liveness-sdk
 ```
 
-2. Register module in `settings.gradle`:
+Add module to `settings.gradle`:
 ```groovy
 include ':liveness-sdk'
 ```
 
-3. Add dependency in app `build.gradle`:
+Add dependency to app `build.gradle`:
 ```groovy
 dependencies {
     implementation project(':liveness-sdk')
@@ -56,8 +93,6 @@ dependencies {
 
 ### 1. Permission Setup
 
-Add permission and camera requirement to `AndroidManifest.xml`:
-
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
 <uses-feature
@@ -68,8 +103,6 @@ Add permission and camera requirement to `AndroidManifest.xml`:
 ---
 
 ### 2. Layout Setup
-
-Add `PreviewView` to your layout:
 
 ```xml
 <androidx.camera.view.PreviewView
@@ -83,8 +116,7 @@ Add `PreviewView` to your layout:
 ### 3. Basic Usage
 
 ```kotlin
-// 1. Create Config
-val livenessConfig = LivenessConfig(
+val config = LivenessConfig(
     steps = listOf(
         LivenessStep.LOOK_LEFT,
         LivenessStep.LOOK_RIGHT,
@@ -93,28 +125,25 @@ val livenessConfig = LivenessConfig(
     isAuditMode = false
 )
 
-// 2. Create Detector
 val detector = LivenessFactory.create(context)
 
-// 3. Bind Camera to Lifecycle
 detector.bind(
     lifecycleOwner = this,
     previewView = cameraPreview
 )
 
-// 4. Start Detection
 detector.startDetection(
-    config = livenessConfig,
+    config = config,
     onStepSuccess = { step ->
-        // Update UI for next instruction
+        // Update instruction UI
     },
     onStepError = { error ->
-        // Handle error (e.g. Face not detected)
+        // Handle detection error
     },
     onComplete = { result ->
         if (result.isSuccess) {
             val selfie = result.totalBitmap
-            // Upload or process final photo
+            // Upload or process selfie
         }
     }
 )
@@ -129,7 +158,7 @@ detector.startDetection(
 | Parameter | Type | Description |
 |--------|------|-------------|
 | `steps` | `List<LivenessStep>` | Ordered verification steps |
-| `isAuditMode` | `Boolean` | `false`: only final photo<br>`true`: save photo for every step |
+| `isAuditMode` | `Boolean` | `false`: final photo only<br>`true`: capture every step |
 
 ---
 
@@ -149,8 +178,8 @@ detector.startDetection(
 | Property | Type | Description |
 |--------|------|-------------|
 | `isSuccess` | `Boolean` | All steps passed |
-| `totalBitmap` | `Bitmap?` | Final selfie (available on success) |
-| `stepEvidence` | `Map<LivenessStep, Bitmap>` | Step photos (audit mode only) |
+| `totalBitmap` | `Bitmap?` | Final selfie |
+| `stepEvidence` | `Map<LivenessStep, Bitmap>` | Audit mode evidence |
 | `error` | `LivenessError?` | Failure reason |
 
 ---
@@ -163,21 +192,32 @@ detector.startDetection(
 
 ---
 
+## 🔒 Privacy & Security
+
+- **Offline Processing**  
+  All face detection and liveness checks run fully on-device.
+
+- **No Cloud Upload**  
+  This SDK does **not** collect, store, or transmit facial data.
+
+- **Developer-Controlled Data**  
+  Final Bitmap results are returned directly to the host app.
+
+---
+
 ## 🤝 Contributing
 
-Contributions are welcome.
+Pull Requests are welcome.
 
 - Core logic: `internal/FaceAnalyzer.kt`
-- Public APIs: `api` package
-
-Submit changes via Pull Request.
+- Public API: `api` package
 
 ---
 
 ## 📄 License
 
 ```text
-Copyright 2025 Nunu Nugraha
+Copyright 2025 Komerce
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
