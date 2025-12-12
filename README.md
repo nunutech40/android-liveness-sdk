@@ -34,7 +34,7 @@ Built on top of **Google ML Kit** and **CameraX**.
 
 1. Add SDK as submodule:
 ```bash
-git submodule add https://github.com/YOUR_USERNAME/android-liveness-sdk.git liveness-sdk
+git submodule add https://github.com/nunutech40/android-liveness-sdk.git liveness-sdk
 ```
 
 2. Register module in `settings.gradle`:
@@ -177,7 +177,7 @@ Submit changes via Pull Request.
 ## 📄 License
 
 ```text
-Copyright 2025 Komerce
+Copyright 2025 Nunu Nugraha
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
