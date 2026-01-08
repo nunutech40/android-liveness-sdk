@@ -5,8 +5,8 @@ import  android.graphics.Bitmap
 // Tahapan Liveness
 enum class LivenessStep {
     IDLE,       // Belum mulai
-    LOOK_LEFT,  // "Silakan Tengok Kiri"
     LOOK_RIGHT, // "Silakan Tengok Kanan"
+    LOOK_LEFT,  // "Silakan Tengok Kiri"
     SMILE,      // "Silakan Senyum"
     BLINK,
     DONE        // Selesai

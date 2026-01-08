@@ -108,8 +108,8 @@ internal class FaceAnalyzer(
         val smileProb = face.smilingProbability ?: 0f
 
         val isStepValid = when (currentTargetStep) {
-            LivenessStep.LOOK_LEFT -> yaw > 35
             LivenessStep.LOOK_RIGHT -> yaw < -35
+            LivenessStep.LOOK_LEFT -> yaw > 35
             LivenessStep.SMILE -> (yaw > -15 && yaw < 15) && smileProb > 0.7
             LivenessStep.BLINK -> (face.leftEyeOpenProbability ?: 1f) < 0.4
             else -> false
