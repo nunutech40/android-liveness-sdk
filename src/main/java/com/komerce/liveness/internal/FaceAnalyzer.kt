@@ -43,7 +43,8 @@ import com.komerce.liveness.api.LivenessStep
 
 internal class FaceAnalyzer(
     private val steps: List<LivenessStep>,
-    private val isAuditMode: Boolean, // <--- SUDAH DITAMBAHKAN
+    private val isAuditMode: Boolean,
+    private val isLowEnd: Boolean, // <--- Add this
     private val onStepSuccess: (LivenessStep) -> Unit,
     private val onStepError: (LivenessError) -> Unit,
     private val onComplete: (LivenessResult) -> Unit
@@ -51,7 +52,10 @@ internal class FaceAnalyzer(
 
     // Setup ML Kit
     private val options = FaceDetectorOptions.Builder()
-        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+        .setPerformanceMode(
+            if (isLowEnd) FaceDetectorOptions.PERFORMANCE_MODE_FAST 
+            else FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE
+        )
         .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
         .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
         .enableTracking()
@@ -119,7 +123,7 @@ internal class FaceAnalyzer(
             // --- LOGIC CONFIGURABLE ---
             if (isAuditMode) {
                 // Hanya convert ke bitmap jika mode Audit nyala (Hemat Memori)
-                val bitmap = imageProxy.toBitmap()
+                val bitmap = imageProxy.toRotatedBitmap()
                 evidenceMap[currentTargetStep] = bitmap
             }
 
@@ -138,12 +142,12 @@ internal class FaceAnalyzer(
         isFinished = true
 
         // Ambil Foto Final (Wajib Ada)
-        val finalBitmap = imageProxy.toBitmap()
+        val finalBitmap = imageProxy.toRotatedBitmap()
 
         // Return Result
         onComplete(LivenessResult(
             isSuccess = true,
-            totalBitmap = finalBitmap, // Foto Selfie Lurus
+            totalBitmap = finalBitmap, // Foto Selfie Lurus & Tegak
             stepEvidence = if (isAuditMode) evidenceMap else emptyMap() // Bukti Step (Opsional)
         ))
     }

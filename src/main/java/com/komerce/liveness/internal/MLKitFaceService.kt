@@ -80,9 +80,11 @@ internal class MLKitFaceService(
         preview.setSurfaceProvider(view.surfaceProvider)
 
         // 2. Setup Analyzer (Otak Logika)
+        val isLowEnd = DeviceUtils.isLowEndDevice(context)
         faceAnalyzer = FaceAnalyzer(
             steps = config.steps,
             isAuditMode = config.isAuditMode,
+            isLowEnd = isLowEnd,
             onStepSuccess = onStepSuccess,
             onStepError = onStepError,
             onComplete = { result ->
@@ -92,10 +94,15 @@ internal class MLKitFaceService(
         )
 
         // 3. Setup UseCase ImageAnalysis (Aliran data di belakang layar)
-        val imageAnalysis = ImageAnalysis.Builder()
+        val imageAnalysisBuilder = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            .also {
+        
+        if (isLowEnd) {
+             // Kurangi resolusi buat HP kentang biar lancar
+             imageAnalysisBuilder.setTargetResolution(android.util.Size(480, 640))
+        }
+
+        val imageAnalysis = imageAnalysisBuilder.build().also {
                 // Pasang analyzer ke thread background
                 it.setAnalyzer(cameraExecutor, faceAnalyzer!!)
             }
