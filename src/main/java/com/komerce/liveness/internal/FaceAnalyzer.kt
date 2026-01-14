@@ -44,7 +44,7 @@ import com.komerce.liveness.api.LivenessStep
 internal class FaceAnalyzer(
     private val steps: List<LivenessStep>,
     private val isAuditMode: Boolean,
-    private val isLowEnd: Boolean, // <--- Add this
+    private val isLowEnd: Boolean,
     private val onStepSuccess: (LivenessStep) -> Unit,
     private val onStepError: (LivenessError) -> Unit,
     private val onComplete: (LivenessResult) -> Unit
@@ -147,8 +147,8 @@ internal class FaceAnalyzer(
         // Return Result
         onComplete(LivenessResult(
             isSuccess = true,
-            totalBitmap = finalBitmap, // Foto Selfie Lurus & Tegak
-            stepEvidence = if (isAuditMode) evidenceMap else emptyMap() // Bukti Step (Opsional)
+            totalBitmap = finalBitmap, // Final selfie in Portrait orientation
+            stepEvidence = if (isAuditMode) evidenceMap else emptyMap()
         ))
     }
 }

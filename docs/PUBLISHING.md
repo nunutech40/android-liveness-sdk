@@ -33,7 +33,7 @@ afterEvaluate {
         publications {
             release(MavenPublication) {
                 from components.release // Mengambil output build release (.aar)
-                groupId = 'com.komerce.liveness'
+                groupId = 'com.github.nunutech40'
                 artifactId = 'liveness-sdk'
                 version = '1.0.0'
             }

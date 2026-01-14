@@ -5,37 +5,29 @@
 </p>
 
 **Simple, Configurable, and Lightweight Liveness Detection for Android**  
-Built on top of **Google ML Kit** and **CameraX**, designed for real-world verification use cases.
+Built on top of **Google ML Kit** and **CameraX**, designed for real-world identity verification.
 
-![Kotlin](https://img.shields.io/badge/language-Kotlin-purple)
+[![Kotlin](https://img.shields.io/badge/language-Kotlin-purple)](https://kotlinlang.org/)
 ![MinSDK](https://img.shields.io/badge/minSdk-24-orange)
 ![Platform](https://img.shields.io/badge/platform-Android-green)
-
----
-
-## 📄 Documentation
-For detailed requirements and technical specifications, please refer to:
-- [Product Requirements Document (PRD)](docs/PRD.md)
-- [Technical Requirements Document (TRD)](docs/TRD.md)
-- [Publishing Guide (JitPack)](docs/PUBLISHING.md)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
 ## ✨ Features
 
-- **Configurable Verification Steps** - Define custom liveness flow (Look Left → Look Right → Smile → Blink).
-- **Portrait Output** - Captured images are automatically rotated to portrait (Upright).
-- **Low-end Device Optimization** - Automatic performance adjustment for budget devices.
-- **Audit Mode Support** - Capture evidence for each step or only final selfie.
-- **Privacy First (Offline Processing)** - All face analysis happens on-device. No cloud dependency.
+- **✅ Multi-Step Verification** - Customizable flow: Look Left, Look Right, Smile, Blink.
+- **📱 Portrait Optimized** - High-quality portrait output images, automatically rotated and corrected.
+- **⚡ Low-End Performance** - Intelligent hardware detection with auto-tuning for budget devices.
+- **🔒 Privacy First** - 100% On-device processing. No cloud, no biometric data ever leaves the phone.
+- **📸 Audit Mode** - Capture evidence bitmpas for every individual step or just the final selfie.
 
 ---
 
 ## 🛠 Installation
 
-### Via Maven (JitPack)
-
-Add this to your root `build.gradle` or `settings.gradle`:
+### 1. Link JitPack to your project
+Add the JitPack repository to your `settings.gradle` or root `build.gradle`:
 
 ```kotlin
 dependencyResolutionManagement {
@@ -47,7 +39,8 @@ dependencyResolutionManagement {
 }
 ```
 
-Add the dependency to your app `build.gradle`:
+### 2. Add Dependency
+Add the following to your app module's `build.gradle`:
 
 ```kotlin
 dependencies {
@@ -59,16 +52,15 @@ dependencies {
 
 ## 🚀 Quick Start
 
-### 1. Permission Setup
+### 1. Permissions
+Ensure you have the Camera permission in your `AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
-<uses-feature
-    android:name="android.hardware.camera"
-    android:required="true" />
 ```
 
-### 2. Layout Setup
+### 2. Layout
+Add `PreviewView` to your XML layout where the camera should appear:
 
 ```xml
 <androidx.camera.view.PreviewView
@@ -77,9 +69,11 @@ dependencies {
     android:layout_height="match_parent" />
 ```
 
-### 3. Basic Usage
+### 3. Implementation
+Initialize and start the liveness detection:
 
 ```kotlin
+// 1. Create Configuration
 val config = LivenessConfig(
     steps = listOf(
         LivenessStep.LOOK_LEFT,
@@ -89,25 +83,25 @@ val config = LivenessConfig(
     isAuditMode = false
 )
 
+// 2. Create Detector
 val detector = LivenessFactory.create(context)
 
-detector.bind(
-    lifecycleOwner = this,
-    previewView = cameraPreview
-)
+// 3. Bind to Lifecycle
+detector.bind(lifecycleOwner = this, previewView = binding.cameraPreview)
 
+// 4. Start Session
 detector.startDetection(
     config = config,
     onStepSuccess = { step ->
-        // Update instruction UI (e.g., "Now Smile!")
+        // Trigger UI feedback (e.g., "Good! Now blink.")
     },
     onStepError = { error ->
-        // Handle detection error (e.g., Face not detected)
+        // Handle common errors (e.g., No face detected)
     },
     onComplete = { result ->
         if (result.isSuccess) {
-            val selfie = result.totalBitmap // Guaranteed Portrait
-            // Upload or process selfie
+            val selfie: Bitmap? = result.totalBitmap
+            // Use your high-res portrait selfie!
         }
     }
 )
@@ -115,20 +109,35 @@ detector.startDetection(
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ API Reference
 
-Check the [LivenessConfig](src/main/java/com/komerce/liveness/api/LivenessConfig.kt) for full options.
+### `LivenessStep`
+Defines the required user movement:
+- `LOOK_LEFT`: User must turn head to the left.
+- `LOOK_RIGHT`: User must turn head to the right.
+- `SMILE`: User must smile.
+- `BLINK`: User must blink eyes.
+
+### `LivenessError`
+Handles failure scenarios:
+- `NO_FACE_DETECTED`: No face in frame.
+- `MULTIPLE_FACES`: More than one face detected (Anti-spoofing).
+- `FACE_TOO_FAR` / `TOO_CLOSE`: Distance guidance.
 
 ---
 
-## 🤝 Contributing
+## � Support the Developer
 
-Pull Requests are welcome. Please read [TRD.md](docs/TRD.md) for architectural overview.
+Hi! I'm **Nunu Nugraha**, the independent developer behind this Liveness SDK. 
+
+This project was born out of my passion for high-performance mobile AI. My goal is to keep this library free, high-quality, and open-source for the developer community. If this SDK has saved you weeks of work or helped your business, consider supporting my work. Your contribution directly helps me maintain this project and build even more innovative tools!
+
+- **Traktir di Saweria (IDR):** [saweria.co/nunugraha17](https://saweria.co/nunugraha17)
+- **Buy Me a Coffee (International):** [buymeacoffee.com/nunutech401](https://www.buymeacoffee.com/nunutech401)
 
 ---
 
-## 📄 License
+## �📄 License
 
-Copyright 2025 Komerce
-Licensed under the Apache License, Version 2.0.
-
+Copyright 2025 Nunu Nugraha.  
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. See the [LICENSE](LICENSE) file for details.

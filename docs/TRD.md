@@ -33,7 +33,7 @@ Transform the project into a distributable library:
     publishing {
         publications {
             release(MavenPublication) {
-                groupId = 'com.komerce.liveness'
+                groupId = 'com.github.nunutech40'
                 artifactId = 'liveness-sdk'
                 version = '1.0.0'
                 afterEvaluate {

@@ -98,7 +98,7 @@ internal class MLKitFaceService(
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
         
         if (isLowEnd) {
-             // Kurangi resolusi buat HP kentang biar lancar
+             // Reduce resolution for low-end devices to maintain performance
              imageAnalysisBuilder.setTargetResolution(android.util.Size(480, 640))
         }
 
