@@ -1,2 +1,9 @@
-/build
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+.idea/
+*.iml
 .DS_Store
