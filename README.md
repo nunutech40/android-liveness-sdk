@@ -44,7 +44,7 @@ Add the following to your app module's `build.gradle`:
 
 ```kotlin
 dependencies {
-    implementation 'com.github.nunutech40:android-liveness-sdk:v1.0.0'
+    implementation 'com.github.nunutech40:android-liveness-sdk:v1.0.3'
 }
 ```
 

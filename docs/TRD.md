@@ -6,9 +6,9 @@
 - **Java Version:** 21 (LTS)
 - **Gradle Version:** 8.5
 - **Core Libraries:**
-    - CameraX (1.3.0)
-    - Google ML Kit Face Detection (16.1.6)
-    - Kotlin Coroutines
+    - CameraX (1.3.0) - *Required for toBitmap() support*
+    - Google ML Kit Face Detection (16.1.5)
+    - Kotlin Coroutines (1.6.4)
 
 ## 2. Architecture Enhancements
 
