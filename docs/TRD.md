@@ -3,6 +3,8 @@
 ## 1. Technical Stack
 - **Languages:** Kotlin
 - **Minimum SDK:** 24 (Android 7.0)
+- **Java Version:** 21 (LTS)
+- **Gradle Version:** 8.5
 - **Core Libraries:**
     - CameraX (1.3.0)
     - Google ML Kit Face Detection (16.1.6)

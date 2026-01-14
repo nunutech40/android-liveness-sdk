@@ -11,12 +11,8 @@ Agar project ini bisa dibaca oleh JitPack sebagai library, ada beberapa hal yang
 - **Public Repository:** Library harus di-push ke GitHub (publik) agar bisa diakses oleh JitPack secara gratis.
 - **Gradle Wrapper:** Project wajib memiliki file `gradlew` dan folder `gradle/wrapper` di root agar JitPack bisa menjalankan build otomatis.
 
-### 1.5 Generate Gradle Wrapper (Penting!)
-Jika kamu tidak melihat file `gradlew` di root project-mu, kamu harus membuatnya terlebih dahulu melalui Terminal di Android Studio:
-```bash
-gradle wrapper --gradle-version 8.9
-```
-*Pastikan file `gradlew`, `gradlew.bat`, dan folder `gradle/` ikut di-commit dan di-push ke GitHub.*
+### 1.5 Gradle Wrapper (Sudah Siap!)
+Project ini sudah dilengkapi dengan `gradlew` (Gradle 8.5). Kamu tidak perlu menginstall Gradle secara global di Mac kamu. Cukup gunakan perintah `./gradlew` yang ada di root project.
 
 ## 2. Langkah-Langkah Teknis
 
