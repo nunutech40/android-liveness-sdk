@@ -1,7 +1,7 @@
 # 📸 Android Liveness Detection SDK
 
 <p align="center">
-  <img src="https://link-to-your-gif/demo.gif" width="300" />
+  <img src="https://raw.githubusercontent.com/nunutech40/android-liveness-sdk/main/docs/demo.gif" width="300" alt="Liveness SDK Demo" />
 </p>
 
 **Simple, Configurable, and Lightweight Liveness Detection for Android**  
@@ -9,6 +9,7 @@ Built on top of **Google ML Kit** and **CameraX**, designed for real-world ident
 
 [![Kotlin](https://img.shields.io/badge/language-Kotlin-purple)](https://kotlinlang.org/)
 ![MinSDK](https://img.shields.io/badge/minSdk-24-orange)
+![Java](https://img.shields.io/badge/Java-11%2B-blue)
 ![Platform](https://img.shields.io/badge/platform-Android-green)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
@@ -20,21 +21,30 @@ Built on top of **Google ML Kit** and **CameraX**, designed for real-world ident
 - **📱 Portrait Optimized** - High-quality portrait output images, automatically rotated and corrected.
 - **⚡ Low-End Performance** - Intelligent hardware detection with auto-tuning for budget devices.
 - **🔒 Privacy First** - 100% On-device processing. No cloud, no biometric data ever leaves the phone.
-- **📸 Audit Mode** - Capture evidence bitmpas for every individual step or just the final selfie.
+- **📸 Audit Mode** - Capture evidence bitmaps for every individual step or just the final selfie.
 
 ---
 
-## 🛠 Installation
+## 📋 System Requirements
 
-### 1. Link JitPack to your project
-Add the JitPack repository to your `settings.gradle` or root `build.gradle`:
+- **Minimum SDK**: API Level 24 (Android 7.0)
+- **Compile SDK**: API Level 34+
+- **Java Version**: Java 11 or 17
+- **Kotlin Version**: 1.7.0+
+
+---
+
+## 🛠️ Installation
+
+### 1. Repository Setup
+Add the JitPack repository to your `settings.gradle` (using the modern `dependencyResolutionManagement` style):
 
 ```kotlin
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+        maven { url = uri("https://jitpack.io") }
     }
 }
 ```
@@ -44,7 +54,7 @@ Add the following to your app module's `build.gradle`:
 
 ```kotlin
 dependencies {
-    implementation 'com.github.nunutech40:android-liveness-sdk:v1.0.3'
+    implementation("com.github.nunutech40:android-liveness-sdk:1.0.4")
 }
 ```
 
@@ -53,14 +63,14 @@ dependencies {
 ## 🚀 Quick Start
 
 ### 1. Permissions
-Ensure you have the Camera permission in your `AndroidManifest.xml`:
+Add Camera permission in your `AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
 ```
 
 ### 2. Layout
-Add `PreviewView` to your XML layout where the camera should appear:
+Add `PreviewView` to your XML layout:
 
 ```xml
 <androidx.camera.view.PreviewView
@@ -70,38 +80,50 @@ Add `PreviewView` to your XML layout where the camera should appear:
 ```
 
 ### 3. Implementation
-Initialize and start the liveness detection:
+The following is a basic implementation in an Activity or Fragment:
 
 ```kotlin
+import com.komerce.liveness.LivenessFactory
+import com.komerce.liveness.api.*
+
 // 1. Create Configuration
 val config = LivenessConfig(
     steps = listOf(
         LivenessStep.LOOK_LEFT,
         LivenessStep.LOOK_RIGHT,
+        LivenessStep.BLINK,
         LivenessStep.SMILE
     ),
-    isAuditMode = false
+    isAuditMode = true // Optional: capture bitmap for every step
 )
 
 // 2. Create Detector
-val detector = LivenessFactory.create(context)
+val detector = LivenessFactory.create(this)
 
-// 3. Bind to Lifecycle
+// 3. Bind to Lifecycle & PreviewView
 detector.bind(lifecycleOwner = this, previewView = binding.cameraPreview)
 
 // 4. Start Session
 detector.startDetection(
     config = config,
     onStepSuccess = { step ->
-        // Trigger UI feedback (e.g., "Good! Now blink.")
+        // Trigger UI feedback (e.g., Update instruction text)
+        statusTextView.text = "Success: ${step.name}. Next step..."
     },
     onStepError = { error ->
-        // Handle common errors (e.g., No face detected)
+        // Handle common issues (e.g., No face detected)
+        errorTextView.text = when(error) {
+            LivenessError.NO_FACE_DETECTED -> "Please show your face"
+            LivenessError.MULTIPLE_FACES -> "Multiple faces detected!"
+            else -> "Align your face to the center"
+        }
     },
     onComplete = { result ->
         if (result.isSuccess) {
-            val selfie: Bitmap? = result.totalBitmap
-            // Use your high-res portrait selfie!
+            val mainSelfie = result.totalBitmap // The final high-res selfie
+            val stepPhotos = result.stepEvidence // Map of Step -> Bitmap (if isAuditMode=true)
+            
+            // Proceed with your business logic (e.g. Upload to server)
         }
     }
 )
@@ -112,32 +134,35 @@ detector.startDetection(
 ## ⚙️ API Reference
 
 ### `LivenessStep`
-Defines the required user movement:
-- `LOOK_LEFT`: User must turn head to the left.
-- `LOOK_RIGHT`: User must turn head to the right.
-- `SMILE`: User must smile.
-- `BLINK`: User must blink eyes.
+Defines the required user actions:
+- `LOOK_LEFT` / `LOOK_RIGHT`: Head rotation detection.
+- `SMILE`: Smile probability detection.
+- `BLINK`: Eye blink detection.
 
 ### `LivenessError`
-Handles failure scenarios:
+Real-time feedback during detection:
 - `NO_FACE_DETECTED`: No face in frame.
-- `MULTIPLE_FACES`: More than one face detected (Anti-spoofing).
+- `MULTIPLE_FACES`: Anti-spoofing - prevents multiple people in frame.
 - `FACE_TOO_FAR` / `TOO_CLOSE`: Distance guidance.
+- `NOT_CENTERED`: Ensures face is within the optimal area.
 
 ---
 
-## � Support the Developer
-
-Hi! I'm **Nunu Nugraha**, the independent developer behind this Liveness SDK. 
-
-This project was born out of my passion for high-performance mobile AI. My goal is to keep this library free, high-quality, and open-source for the developer community. If this SDK has saved you weeks of work or helped your business, consider supporting my work. Your contribution directly helps me maintain this project and build even more innovative tools!
-
-- **Traktir di Saweria (IDR):** [saweria.co/nunugraha17](https://saweria.co/nunugraha17)
-- **Buy Me a Coffee (International):** [buymeacoffee.com/nunutech401](https://www.buymeacoffee.com/nunutech401)
+## 🛡️ ProGuard / R8
+The SDK provides its own ProGuard rules. You don't need to add any special configuration to your `proguard-rules.pro`. Our library includes `consumer-rules.pro` which automatically handles the necessary obfuscation exclusions for ML Kit and Internal APIs.
 
 ---
 
-## �📄 License
+## ☕ Support the Developer
+
+Hi! I'm **Nunu Nugraha**, an independent developer passionate about mobile AI. If this SDK helps your project, consider supporting its maintenance!
+
+- **Saweria (IDR):** [saweria.co/nunugraha17](https://saweria.co/nunugraha17)
+- **Buy Me a Coffee:** [buymeacoffee.com/nunutech401](https://www.buymeacoffee.com/nunutech401)
+
+---
+
+## 📄 License
 
 Copyright 2025 Nunu Nugraha.  
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. See the [LICENSE](LICENSE) file for details.
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.

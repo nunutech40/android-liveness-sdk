@@ -26,6 +26,7 @@ android {
         minSdk 24
         targetSdk 34
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'proguard-rules.pro'
     }
 
     buildTypes {
@@ -77,8 +78,8 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.release
                 groupId = 'com.github.nunutech40'
-                artifactId = 'liveness-sdk'
-                version = '1.0.0'
+                artifactId = 'android-liveness-sdk'
+                version = '1.0.4'
             }
         }
     }
