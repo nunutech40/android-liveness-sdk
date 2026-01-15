@@ -3,12 +3,14 @@
 ## 1. Technical Stack
 - **Languages:** Kotlin
 - **Minimum SDK:** 24 (Android 7.0)
-- **Java Version:** 21 (LTS)
+- **Target SDK:** 35 (Android 15)
+- **Compile SDK:** 35 (Android 15)
+- **Java Version:** 11 or 17
 - **Gradle Version:** 8.5
 - **Core Libraries:**
-    - CameraX (1.3.0) - *Required for toBitmap() support*
-    - Google ML Kit Face Detection (16.1.5)
-    - Kotlin Coroutines (1.6.4)
+    - CameraX (1.4.1) - *16KB page alignment support*
+    - Google ML Kit Face Detection (16.1.7)
+    - Kotlin Coroutines (1.7.3)
 
 ## 2. Architecture Enhancements
 

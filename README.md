@@ -22,13 +22,15 @@ Built on top of **Google ML Kit** and **CameraX**, designed for real-world ident
 - **⚡ Low-End Performance** - Intelligent hardware detection with auto-tuning for budget devices.
 - **🔒 Privacy First** - 100% On-device processing. No cloud, no biometric data ever leaves the phone.
 - **📸 Audit Mode** - Capture evidence bitmaps for every individual step or just the final selfie.
+- **📱 Android 15+ Ready** - Full support for 16KB page alignment (Google Play requirement from Nov 2025).
 
 ---
 
 ## 📋 System Requirements
 
 - **Minimum SDK**: API Level 24 (Android 7.0)
-- **Compile SDK**: API Level 34+
+- **Compile SDK**: API Level 35 (Android 15)
+- **Target SDK**: API Level 35 (Android 15)
 - **Java Version**: Java 11 or 17
 - **Kotlin Version**: 1.7.0+
 
@@ -54,7 +56,7 @@ Add the following to your app module's `build.gradle`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.nunutech40:android-liveness-sdk:1.0.4")
+    implementation("com.github.nunutech40:android-liveness-sdk:1.0.5")
 }
 ```
 
@@ -150,6 +152,16 @@ Real-time feedback during detection:
 
 ## 🛡️ ProGuard / R8
 The SDK provides its own ProGuard rules. You don't need to add any special configuration to your `proguard-rules.pro`. Our library includes `consumer-rules.pro` which automatically handles the necessary obfuscation exclusions for ML Kit and Internal APIs.
+
+---
+
+## 📱 Android 15+ Compatibility
+
+This SDK is **fully compatible** with Android 15's 16KB page size requirement (mandatory for Google Play from November 2025). 
+
+We use **CameraX 1.4.1** which includes properly aligned native libraries, ensuring your app will pass Google Play's validation checks.
+
+**For detailed technical information**, see [16KB Page Alignment Documentation](docs/16KB_PAGE_ALIGNMENT.md).
 
 ---
 
